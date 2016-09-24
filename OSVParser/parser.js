@@ -28,26 +28,28 @@ client.connect(function(err) {
   client.query(sql, function(err, result) {
   	var count = result.rowCount
   	num++
- 	console.log(num)
+ 	//console.log(num)
   	if(!count || count == 0)
   	{
   		clearInterval(timer)
   		return
   	}
-  	console.log(result.rowCount)
+  	//console.log(result.rowCount)
     for(i=0;i<count;i++)
     {
     	//console.log(result.rows[i].row_to_json.geometry.coordinates);
     	//console.log(result.rows[i].row_to_json.properties)
     		var tempchunks = coordArrayToChunks2(parseLinestringRoadtoLineCoords(result.rows[i].row_to_json.geometry.coordinates),result.rows[i].row_to_json.properties.name)
 	//todo: return one chunk and pass it to mongo
-			for (var c in tempchunks)//check each chunk that was just spit out from processing functions....
+//console.log(tempchunks)
+//process.exit()
+			for (c in tempchunks)//check each chunk that was just spit out from processing functions....
 		{
-			writeMongo(c)
+      writeMongo(tempchunks[c])
 		}
 	}
 	//parseOSMtoVoxeljs(result).length
-	console.log(count)
+	//console.log(count)
 	timer = setTimeout(work,100);
     //output: Tue Jan 15 2013 19:12:47 GMT-600 (CST)
     //client.end();
@@ -61,7 +63,7 @@ client.connect(function(err) {
 
 
 //Convert coords the use the equator to xy of an onscreen map for continous coords.
-//hard values are max 3857 values.  IF is not needed, the math works that both 
+//hard values are max 3857 values.  IF is not needed, the math works that both
 //+ and - coords convert correctly with the same formula.
 //Math.floor because I don't care about percents of a meter.
 function convertEPSG3857toScreenXY(lat,lon)
@@ -74,9 +76,9 @@ function convertEPSG3857toScreenXY(lat,lon)
 	//return [lat,lon];
 }
 
-//Code from 
+//Code from
 //http://stackoverflow.com/questions/4672279/bresenham-algorithm-in-javascript
-function calcStraightLine (startCoordinates, endCoordinates) 
+function calcStraightLine (startCoordinates, endCoordinates)
 {
     var coordinatesArray = new Array();
     // Translate coordinates
@@ -155,24 +157,30 @@ function coordArrayToChunks2(coordArray,roadname)
 
 	//console.log(coordArray[0] , 'to' , coordArray[coordArray.length-1])
 	var chunks = new Array();
-	var chunkCoords = new Array();
+	var chunks = new Object();
+  var chunkCoords = new Array();
 	var voxels = new Int8Array(32 * 32 * 32);
 	for (v=0;v < voxels.length;v++)
 	{
 		voxels[v] = 0;
-	}	
+	}
 	//console.log(coordArray.length, ' line points to parse.')
 	for (i =0;i < coordArray.length;i++)
 	{
-		var x = coordArray[i].x 
-		var y = coordArray[i].y 
+		var x = coordArray[i].x
+		var y = coordArray[i].y
 		var chunkc = calcChunkCoordsFromCoords(x,y,32)
 		var chunkname = calcChunkNameFromCoords(x,y,32)
 		if (chunkname in chunks)
-		{}
+		{
+      //need to define a blank chunk here!maybe?
+      //console.log('exist', chunkname
+      //)
+    }
 		else
 		{
-			chunks[chunkname] = 
+      //console.log('no exist', chunkname)
+			chunks[chunkname] =
 			{
 			roadname: roadname,
 		    position : [chunkc.x,chunkc.y,chunkc.z],
@@ -202,20 +210,21 @@ function coordArrayToChunks2(coordArray,roadname)
 			if (chunks[chunkname].voxels[(32*32*2)+pos] !=2) {chunks[chunkname].voxels[(32*32*2)+pos]= 3}
 			if (chunks[chunkname].voxels[pos-(32*32*2)] !=2) {chunks[chunkname].voxels[pos-(32*32*2)] = 3}
 	}
+  //console.log('chunk', chunks['294591|0|424978'])
 	return chunks;
 }
 
 function parseOSMtoVoxeljs(road){
-//var chunks = coordArrayToChunks();
-var chunks = new Array()// = coordArrayToChunks2();  //master array to hold chunks.
-console.time('All-Meters');//Start a timer to track how long convertion from geojson to 
-var polygons ={}
-	for(i2 = 0;i2 < road.rowCount;i2++) //for every road in array/dataset
-	{
+ //var chunks = coordArrayToChunks();
+ var chunks = new Array()// = coordArrayToChunks2();  //master array to hold chunks.
+ console.time('All-Meters');//Start a timer to track how long convertion from geojson to
+ var polygons ={}
+ for(i2 = 0;i2 < road.rowCount;i2++) //for every road in array/dataset
+ {
 		//i2 = road.features.length
 		  //  	console.log(result.rows[i].row_to_json.geometry.coordinates);
     	//console.log(result.rows[i].row_to_json.properties)
-		console.log(i2,"of",road.rowCount) //progress - how many roads do we have to left to process?
+		//console.log(i2,"of",road.rowCount) //progress - how many roads do we have to left to process?
 		var tempchunks = coordArrayToChunks2(parseLinestringRoadtoLineCoords(road.rows[i2].row_to_json.geometry.coordinates),road.rows[i2].row_to_json.properties.name)//processing functions - return assigned to temp varible.
 		//console.log(road.features[i2].properties.name)
 		for (var c in tempchunks)//check each chunk that was just spit out from processing functions....
@@ -238,20 +247,19 @@ var polygons ={}
 			else
 			{
 			//if a particular chunk doesn't exist in the master array, add it to the master array.
-			chunks[tempchunks[c].position.join("|")] = tempchunks[c]	
+			chunks[tempchunks[c].position.join("|")] = tempchunks[c]
 			}
-			
+
 		}
 
 		//chunks.push.apply(chunks,coordArrayToChunks2(parseLinestringRoadtoLineCoords(road.features[i2].geometry.coordinates)))
 	}
 
-return chunks;
-//console.log(Object.getOwnPropertyNames(chunks).sort());
+ return chunks;
+ //console.log(Object.getOwnPropertyNames(chunks).sort());
 }
 
-function bytesToSize(input, precision)
-{
+function bytesToSize(input, precision){
     var unit = ['', 'K', 'M', 'G', 'T', 'P'];
     var index = Math.floor(Math.log(input) / Math.log(1024));
     if (unit >= unit.length) return input + ' B';
@@ -259,10 +267,10 @@ function bytesToSize(input, precision)
 }
 
 function displayMemUsage(){
-var usage;
-usage = process.memoryUsage();
-console.log('RSS: ' + bytesToSize(usage.rss, 3), 'and Heap:', bytesToSize(usage.heapUsed, 3), 'of', bytesToSize(usage.heapTotal, 3), 'total');
-console.timeEnd('All-Meters');
+ var usage;
+ usage = process.memoryUsage();
+ console.log('RSS: ' + bytesToSize(usage.rss, 3), 'and Heap:', bytesToSize(usage.heapUsed, 3), 'of', bytesToSize(usage.heapTotal, 3), 'total');
+ console.timeEnd('All-Meters');
 }
 
 //vvvvvvvvvvvvvvvvvvvWrite calculations to MongoDBvvvvvvvvvvvvv
@@ -272,7 +280,11 @@ console.timeEnd('All-Meters');
 // Example of a simple findOneAndReplace operation
 function writeMongo(chunk){
 //var chunks = new Array();
+//console.log(chunk.position)
+//console.log(chunk.dims)
+//console.log(chunk)
 var chunkname = chunk.position.join("|");
+console.log(chunk.voxels)
 /*
 chunkname = '1|1|1'
 chunks[chunkname] =
@@ -289,7 +301,7 @@ MongoClient.connect('mongodb://localhost:27017/osblocks', function(err, db) {
   // Get the collection
   var col = db.collection('chunks');
     col.findOneAndReplace({cname:chunkname}
-      , {chunk:chunks[chunkname].voxels,cname:chunkname}
+      , {chunk:chunk.voxels,cname:chunkname}
       , {
       	            projection: null
           , sort: null

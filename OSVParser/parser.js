@@ -1,7 +1,24 @@
 var pg = require('pg');
 //or native libpq bindings
 //var pg = require('pg').native
+//VVV-Mongodb queries-VVV
+//execute in mongo shell
+/*
+'start mongo shell with:'
+mongo
 
+'select db'
+use osblocks
+
+'select *'
+db.chunks.find();
+
+'select count(*)''
+db.chunks.count();
+
+'show all records, but not the "chunk" col'
+*/
+//^^^-Mongodb queries-^^^
 var conString = "postgres://postgres:Asdfjkl1@localhost/gis";
 
 var client = new pg.Client(conString);
@@ -43,14 +60,14 @@ client.connect(function(err) {
 	//todo: return one chunk and pass it to mongo
 //console.log(tempchunks)
 //process.exit()
-			for (c in tempchunks)//check each chunk that was just spit out from processing functions....
+		for (c in tempchunks)//check each chunk that was just spit out from processing functions....
 		{
       writeMongo(tempchunks[c])
 		}
 	}
 	//parseOSMtoVoxeljs(result).length
 	//console.log(count)
-	timer = setTimeout(work,100);
+	timer = setTimeout(work,5000);
     //output: Tue Jan 15 2013 19:12:47 GMT-600 (CST)
     //client.end();
   });
@@ -284,7 +301,7 @@ function writeMongo(chunk){
 //console.log(chunk.dims)
 //console.log(chunk)
 var chunkname = chunk.position.join("|");
-console.log(chunk.voxels)
+//console.log(chunk.voxels)
 /*
 chunkname = '1|1|1'
 chunks[chunkname] =
@@ -315,5 +332,6 @@ MongoClient.connect('mongodb://localhost:27017/osblocks', function(err, db) {
 
         db.close();
     });
+    //db.close();
 });
 }

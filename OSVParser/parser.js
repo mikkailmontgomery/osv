@@ -174,7 +174,6 @@ function coordArrayToChunks2(coordArray,roadname)
 
 	//console.log(coordArray[0] , 'to' , coordArray[coordArray.length-1])
 	var chunks = new Array();
-	var chunks = new Object();
   var chunkCoords = new Array();
 	var voxels = new Int8Array(32 * 32 * 32);
 	for (v=0;v < voxels.length;v++)

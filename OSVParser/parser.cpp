@@ -40,6 +40,7 @@ point convertEPSG3857toScreenXY(float lat,float lon)
 
 std::vector<point> calcStraightLine (point startCoordinates, point endCoordinates)
 {
+    //puts("calcStraightLine");
     std::vector<point> coordinatesArray;
     // Translate coordinates
     int x1 = startCoordinates.x;
@@ -90,6 +91,7 @@ std::vector<point> calcStraightLine (point startCoordinates, point endCoordinate
 //combine all those lines together.
 std::vector<point> parseLinestringRoadtoLineCoords(std::vector<point> LineStringArray)
 {
+  //puts("parseLinestringRoadtoLineCoords");
 	std::vector<point> lineCoordsArray;
 	for (int i = 0;i < LineStringArray.size() - 1;i++)
 	{
@@ -122,6 +124,7 @@ std::string calcChunkNameFromCoords(int xlat,int ylon,int dims)
 
 std::vector<chunk> coordArrayToChunks2(std::vector<point> coordArray, std::string roadname)
 {
+  //puts("coordArrayToChunks2");
 	//console.log(coordArray[0] , 'to' , coordArray[coordArray.length-1])
 	std::vector<chunk> chunks;
 	std::vector<int> voxels(32 * 32 * 32);
@@ -144,14 +147,15 @@ std::vector<chunk> coordArrayToChunks2(std::vector<point> coordArray, std::strin
 		//var chunkname = calcChunkNameFromCoords(x,y,32)
     bool found = false;
     for(int c=0;c<chunks.size();c++){
-      if(chunks[i].position.x == chunkc.x && chunks[i].position.y == chunkc.y && chunks[i].position.z == chunkc.z){
+      if(chunks[c].position.x == chunkc.x && chunks[c].position.y == chunkc.y && chunks[c].position.z == chunkc.z){
         found = true;
-        currentchunkindex = i;
+        currentchunkindex = c;
         break;
       }
     }
 		if (!found)
 		{
+
       //console.log('no exist', chunkname)
       chunk tempchunk;
       tempchunk.roadname = roadname;
@@ -161,28 +165,40 @@ std::vector<chunk> coordArrayToChunks2(std::vector<point> coordArray, std::strin
       tempchunk.dims[2] = 32;
       tempchunk.voxels = voxels;
       chunks.push_back (tempchunk);
-      currentchunkindex = chunks.size();
+      currentchunkindex = chunks.size() - 1;
+      //printf("%d",chunks.size());
 		}
+    //puts("try");
     int px = x - (chunkc.x * (32 + 1));
     int py = (chunkc.y * (32 + 1));
     int pz = y - (chunkc.z * (32 + 1));
     int pos = (32 * 32 * pz) + 0 + px;
-    chunks[currentchunkindex].voxels[pos] = 2;
+    //std::cout << found << std::endl;
+    //printf("%d,%d\n",currentchunkindex,pos);
+    //printf("index = %d\n",currentchunkindex);
+    //printf("%d %d %d %d %d %d %d %d %d %d",pos,pos-2,pos-1,pos+1,pos+1,pos+2,(32*32)+pos,pos-(32*32),(32*32*2)+pos,pos-(32*32*2));
+    if(pos >= 0 && pos < (32*32*32)){
+      //printf("%d\n",chunks.size());
+      //printf("%d\n",chunks[currentchunkindex].voxels.size());
+    chunks[currentchunkindex].voxels[pos] = 2;}
+    //puts("success");
     //fill sides of road center
-    if (chunks[currentchunkindex].voxels[pos-2] != 2) {chunks[currentchunkindex].voxels[pos-2] = 3;}
-    if (chunks[currentchunkindex].voxels[pos-1] != 2) {chunks[currentchunkindex].voxels[pos-1] = 3;}
-    if (chunks[currentchunkindex].voxels[pos+1] != 2) {chunks[currentchunkindex].voxels[pos+1] = 3;}
-    if (chunks[currentchunkindex].voxels[pos+2] != 2) {chunks[currentchunkindex].voxels[pos+2] = 3;}
-    if (chunks[currentchunkindex].voxels[(32*32)+pos] !=2) {chunks[currentchunkindex].voxels[(32*32)+pos]= 3;}
-    if (chunks[currentchunkindex].voxels[pos-(32*32)] !=2) {chunks[currentchunkindex].voxels[pos-(32*32)] = 3;}
-    if (chunks[currentchunkindex].voxels[(32*32*2)+pos] !=2) {chunks[currentchunkindex].voxels[(32*32*2)+pos]= 3;}
-    if (chunks[currentchunkindex].voxels[pos-(32*32*2)] !=2) {chunks[currentchunkindex].voxels[pos-(32*32*2)] = 3;}
+    if (pos-2 >= 0 && pos-2 < (32*32*32)) {if (chunks[currentchunkindex].voxels[pos-2] != 2) {chunks[currentchunkindex].voxels[pos-2] = 3;}}
+    if (pos-1 >= 0 && pos-1 < (32*32*32)) {if (chunks[currentchunkindex].voxels[pos-1] != 2) {chunks[currentchunkindex].voxels[pos-1] = 3;}}
+    if (pos+1 >= 0 && pos+1 < (32*32*32)) {if (chunks[currentchunkindex].voxels[pos+1] != 2) {chunks[currentchunkindex].voxels[pos+1] = 3;}}
+    if (pos+2 >= 0 && pos+2 < (32*32*32)) {if (chunks[currentchunkindex].voxels[pos+2] != 2) {chunks[currentchunkindex].voxels[pos+2] = 3;}}
+    if ((32*32)+pos >= 0 && (32*32)+pos < (32*32*32)) {if (chunks[currentchunkindex].voxels[(32*32)+pos] !=2) {chunks[currentchunkindex].voxels[(32*32)+pos]= 3;}}
+    if (pos-(32*32) >= 0 && pos-(32*32) < (32*32*32)) {if (chunks[currentchunkindex].voxels[pos-(32*32)] !=2) {chunks[currentchunkindex].voxels[pos-(32*32)] = 3;}}
+    if ((32*32*2)+pos >= 0 && (32*32*2)+pos < (32*32*32)) {if (chunks[currentchunkindex].voxels[(32*32*2)+pos] !=2) {chunks[currentchunkindex].voxels[(32*32*2)+pos]= 3;}}
+    if (pos-(32*32*2) >= 0 && pos-(32*32*2) < (32*32*32)) {if (chunks[currentchunkindex].voxels[pos-(32*32*2)] !=2) {chunks[currentchunkindex].voxels[pos-(32*32*2)] = 3;}}
 	}
   //console.log('chunk', chunks['294591|0|424978'])
+  //puts("hmms");
 	return chunks;
 }
 
 std::vector<point> parselinestringtovector(std::string linestring){
+  //puts("parselinestringtovector");
   //ref#http://stackoverflow.com/questions/1195675/convert-a-char-to-stdstring
   //ref#http://stackoverflow.com/questions/1894886/parsing-a-comma-delimited-stdstring
   std::string localls = linestring;
@@ -197,10 +213,12 @@ std::vector<point> parselinestringtovector(std::string linestring){
       std::string substr;
       getline( ss, substr, ',' );
       phase1.push_back( substr );
+      //puts("hmm");
   }
   for(int i = 0;i<phase1.size();i++){
     //printf("%s",phase1[i]);
-    std::cout << phase1[i] << std::endl;
+    //std::cout << phase1[i] << std::endl;
+    point p;
     std::stringstream ss2(phase1[i]);
     std::vector<std::string> temp;
     while( ss2.good() )
@@ -209,8 +227,12 @@ std::vector<point> parselinestringtovector(std::string linestring){
         getline( ss2, substr, ' ' );
         temp.push_back( substr );
     }
-    std::cout << temp[0] << std::endl;
-    std::cout << temp[1] << std::endl;
+    //std::cout << temp[0] << std::endl;
+    //std::cout << temp[1] << std::endl;
+    p.x = atoi(temp[0].c_str());
+    p.y = atoi(temp[1].c_str());
+    //printf("%d %d\n", p.x,p.y);
+    pointarr.push_back(p);
   }
 
   return pointarr;
@@ -243,17 +265,18 @@ int main()
  printf("We received %d records.\n", rec_count);
  puts("==========================");
  for (row=0; row<rec_count; row++) {
-  for (col=0; col<4; col++) {
-   printf("%s\t\n", PQgetvalue(res, row, col));
-   parselinestringtovector(std::string(PQgetvalue(res, row, col)));
-   break;
-   //coordArrayToChunks2(
-    //parseLinestringRoadtoLineCoords(
-    //   road.rows[i2].row_to_json.geometry.coordinates),
-    //road.rows[i2].row_to_json.properties.name)
+   printf("Record# %d\n",row);
+  //for (col=0; col<4; col++) {
+   //printf("%s\t\n", PQgetvalue(res, row, col));
+   //parselinestringtovector(std::string(PQgetvalue(res, row, 0)))
+   //break;
+   coordArrayToChunks2(
+    parseLinestringRoadtoLineCoords(
+       parselinestringtovector(std::string(PQgetvalue(res, row, 0)))),
+    std::string(PQgetvalue(res, row, 2)));
 
    //writeMongo(coordArrayToChunks2)
-  }
+  //}
   puts("");
  }
  puts("==========================");

@@ -17,6 +17,7 @@ db.chunks.find();
 db.chunks.count();
 
 'show all records, but not the "chunk" col'
+db.chunks.find({},{chunk:0});
 */
 //^^^-Mongodb queries-^^^
 var conString = "postgres://postgres:Asdfjkl1@localhost/gis";

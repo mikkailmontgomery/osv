@@ -1,7 +1,16 @@
 //Compile with:
-//g++ parser.cpp -o parser.out -L/usr/local/lib -lpq
+//export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+//c++ --std=c++11 parser.cpp -o parser.out -L/usr/local/lib -lpq $(pkg-config --cflags --libs libmongocxx) && ./parser.out
 //run with:
-//
+//./parser.out
+/*
+this link has an INVALID use of the driver.  Don't use it.
+https://docs.mongodb.com/getting-started/cpp/update/
+Use this instead:
+https://github.com/mongodb/mongo-cxx-driver/blob/master/examples/mongocxx/update.cpp
+thanks article: http://stackoverflow.com/questions/38845214/mongodb-c-tutorial-program-fails-mongocxxv-noabilogic-error
+*/
+
 #include <stdio.h>
 #include <string>
 #include <iostream>
@@ -9,6 +18,23 @@
 #include <math.h>
 #include <vector>
 #include <sstream>
+
+#include <list>
+
+#include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/json.hpp>
+
+//#include <mongocxx/options/find_one_and_replace.hpp>
+#include <mongocxx/client.hpp>
+#include <mongocxx/stdx.hpp>
+#include <mongocxx/instance.hpp>
+#include <mongocxx/uri.hpp>
+using bsoncxx::builder::stream::open_document;
+using bsoncxx::builder::stream::close_document;
+using bsoncxx::builder::stream::open_array;
+using bsoncxx::builder::stream::close_array;
+using bsoncxx::builder::stream::finalize;
+
 
 struct point {
   int x;
@@ -19,6 +45,10 @@ struct voxelxyz {
   int x;
   int y;
   int z;
+  std::string nameFromXYZ()
+  {
+    return std::to_string(x) + '|' + std::to_string(y)  + '|' + std::to_string(z);
+  }
 };
 
 struct chunk {
@@ -242,19 +272,23 @@ std::vector<point> parselinestringtovector(std::string linestring){
 int main()
 {
  std::cout << "Hello world!" << std::endl;
- PGconn          *conn;
+ PGconn          *pgconn;
  PGresult        *res;
  int             rec_count;
  int             row;
  int             col;
- conn = PQconnectdb("dbname=gis host=localhost user=postgres password=Asdfjkl1");
- if (PQstatus(conn) == CONNECTION_BAD) {
+ mongocxx::instance inst{};
+ mongocxx::client conn{mongocxx::uri{}};
+ auto db = conn["osblocks"];
+ //mongocxx::collection collection = conn["osblocks"]["chunks"];
+ pgconn = PQconnectdb("dbname=gis host=localhost user=postgres password=Asdfjkl1");
+ if (PQstatus(pgconn) == CONNECTION_BAD) {
   puts("We were unlineCoordsArrayle to connect to the datlineCoordsArrayase");
   exit(0);
  }
 
  //res = PQexec(conn, "declare geo no scroll cursor with hold for SELECT row_to_json(fc) from (select ST_AsGeoJSON(lg.way)::json As geometry, row_to_json(lp) As properties FROM planet_osm_line As lg INNER JOIN (SELECT osm_id, name,highway FROM planet_osm_line where highway is not null) As lp ON lg.osm_id = lp.osm_id) as fc;");
- res = PQexec(conn, "SELECT ST_AsText(way),osm_id, name,highway FROM planet_osm_line where highway is not null;");
+ res = PQexec(pgconn, "SELECT ST_AsText(way),osm_id, name,highway FROM planet_osm_line where highway is not null;");
  //res = PQexec(conn, "select * from planet_osm_line;");
 
  if (PQresultStatus(res) != PGRES_TUPLES_OK) {
@@ -270,18 +304,59 @@ int main()
    //printf("%s\t\n", PQgetvalue(res, row, col));
    //parselinestringtovector(std::string(PQgetvalue(res, row, 0)))
    //break;
+   std::vector<chunk> c;
+
+   /*
+   printf("%d",
    coordArrayToChunks2(
     parseLinestringRoadtoLineCoords(
        parselinestringtovector(std::string(PQgetvalue(res, row, 0)))),
-    std::string(PQgetvalue(res, row, 2)));
+    std::string(PQgetvalue(res, row, 2))).size()
+  );
+  */
+  c = coordArrayToChunks2(
+   parseLinestringRoadtoLineCoords(
+      parselinestringtovector(std::string(PQgetvalue(res, row, 0)))),
+   std::string(PQgetvalue(res, row, 2)));
+   for(int i=0;i<c.size();i++)
+  {
+    std::cout << c[i].position.nameFromXYZ() << std::endl;
 
+//    std::list<int> aList(c[i].voxels.begin(),c[i].voxels.end());
+//BSONArrayBuilder arrBuilder;
+//arrBuilder.append(aList);
+//bsoncxx::BsonArray barr;
+    bsoncxx::builder::stream::document filter_builder, replace_builder;
+
+filter_builder << "cname"
+               << "294591|0|424978";
+replace_builder << "cname"
+                << "294591|0|424978"
+                << "chuck"
+                << open_array;
+                //<< c[i].voxels
+                for(int n=0;n<5;n++){
+replace_builder << BSON(n);
+                }
+                replace_builder << close_array << finalize;
+//db["chunks"].options.upsert(true);
+mongocxx::options::update u{};
+
+u.upsert(true);
+db["chunks"].replace_one(filter_builder.view(), replace_builder.view(),u);//,u.upsert(true));
+//collection.replace_one(filter_builder.view(), replace_builder.view(),u);//,u.upsert(true));
+
+/**/
+  }
    //writeMongo(coordArrayToChunks2)
   //}
   puts("");
  }
  puts("==========================");
+ int wait;
+ std::cin >> wait;
  PQclear(res);
- PQfinish(conn);
+ PQfinish(pgconn);
  //point p = convertEPSG3857toScreenXY(-10301828.82, 6037668.61);
  //point p2 = convertEPSG3857toScreenXY(-10301855.73, 6037449.53);
  //std::vector<point> v = calcStraightLine(p,p2);
@@ -289,4 +364,5 @@ int main()
 //   printf("coord %d %d \n",v[i].x,v[i].y);
  //}
  //printf("%d",p.x);
+ return 0;
 }

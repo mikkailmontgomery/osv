@@ -29,6 +29,7 @@ thanks article: http://stackoverflow.com/questions/38845214/mongodb-c-tutorial-p
 #include <mongocxx/stdx.hpp>
 #include <mongocxx/instance.hpp>
 #include <mongocxx/uri.hpp>
+using bsoncxx::builder::stream::document;
 using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::close_document;
 using bsoncxx::builder::stream::open_array;
@@ -326,24 +327,35 @@ int main()
 //BSONArrayBuilder arrBuilder;
 //arrBuilder.append(aList);
 //bsoncxx::BsonArray barr;
-    bsoncxx::builder::stream::document filter_builder, replace_builder;
+
+    bsoncxx::builder::stream::document filter_builder;//,
+    document replace_builder;
 
 filter_builder << "cname"
                << "294591|0|424978";
+
 replace_builder << "cname"
-                << "294591|0|424978"
+                << c[i].position.nameFromXYZ();
+                //<< "294591|0|424978";
+    auto replace_builder2 = replace_builder
                 << "chuck"
                 << open_array;
                 //<< c[i].voxels
-                for(int n=0;n<5;n++){
-replace_builder << BSON(n);
+                for(int n=0;n<c[i].voxels.size();n++){
+                  replace_builder2 << c[i].voxels[n];
                 }
-                replace_builder << close_array << finalize;
+
+                replace_builder2 << close_array;
+                bsoncxx::document::value doc = replace_builder << finalize;
+                //std::cout << bsoncxx::to_json(doc) << std::endl;
+                //<< finalize;
+
 //db["chunks"].options.upsert(true);
 mongocxx::options::update u{};
 
+
 u.upsert(true);
-db["chunks"].replace_one(filter_builder.view(), replace_builder.view(),u);//,u.upsert(true));
+db["chunks"].replace_one(filter_builder.view(), doc.view(),u);//,u.upsert(true));
 //collection.replace_one(filter_builder.view(), replace_builder.view(),u);//,u.upsert(true));
 
 /**/

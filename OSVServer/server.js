@@ -363,6 +363,11 @@ var http = require('http');
 var url = require('url');
 // Configure our HTTP server to respond with chunks in JSON format.
 var server = http.createServer(function (request, response) {
+  var requestUrl = url.parse(request.url)
+  if(requestUrl.pathname == "/"){
+    requestUrl.pathname = "/index.html"
+  }
+  var query = requestUrl.query;
 	//settings to allow XHR/AJAX request from client app(though its the same domain, its a different port.)
 	//set content to JSON, so browser will read response as JSON instead of text/html.
   response.writeHead(200, {
@@ -371,8 +376,6 @@ var server = http.createServer(function (request, response) {
         "Access-Control-Allow-Method": "POST, GET, OPTIONS",
         "Access-Control-Allow-Headers": request.headers["access-control-request-headers"]
   });
-  var url_parts = url.parse(request.url, true);
-  var query = url_parts.query;
 
   if (query.chunk in chunks)
   {

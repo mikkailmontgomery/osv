@@ -19,11 +19,11 @@ var game
 module.exports = function(opts, setup) {
   setup = setup || defaultSetup
 
-  
 
 
 
-  
+
+
   var defaults = {
     generateChunks: false,
     chunkDistance: 3,
@@ -42,7 +42,7 @@ module.exports = function(opts, setup) {
   window.game = game // for debugging
   game.appendTo(container)
   if (game.notCapable()) return game
-  
+
   var createPlayer = player(game)
 
   // create the player from a minecraft skin file and tell the
@@ -74,7 +74,7 @@ module.exports = function(opts, setup) {
     })
     if (interacting) sendState()
   })
-  
+
   return game
 }
 players = {}
@@ -97,14 +97,14 @@ players = {}
       var player = players[msg.id]
               }
 
-              
+
                  players[msg.id].position.set( msg.position.x,msg.position.y,msg.position.z )
                  players[msg.id].children[0].rotation.y = msg.rotation.y + (Math.PI / 2)
                  players[msg.id].head.rotation.x = scale(msg.rotation.x, -1.5, 1.5, -0.75, 0.75)
                  //players[i].body.mesh.position.copy(playerMesh.position.lerp(msg.position, 0.1))
                  //players[i].body.mesh.position.copy(players[i].body.mesh.position.lerp(msg.position, 0.1))
                  //console.log("yo")
-              
+
           //}
       })
 
@@ -137,11 +137,11 @@ function scale( x, fromLow, fromHigh, toLow, toHigh ) {
   }
 
 function defaultSetup(game, avatar) {
-  
+
   var makeFly = fly(game)
   var target = game.controls.target()
   game.flyer = makeFly(target)
-  
+
   // highlight blocks when you look at them, hold <Ctrl> for block placement
   var blockPosPlace, blockPosErase
   var hl = game.highlighter = highlight(game, { color: 0xff0000 })
@@ -183,7 +183,7 @@ console.log(littleblocks.length)
             littleblocks[i].block.scale.set(1/16,1/16,1/16)  //16 pixels on a face of a voxel, to 1/16 makes a 1 to 1 voxel in a voxel. 1/16,1/16,1/16 is the middle of the voxel.
             littleblocks[i].block.position.set(position[0]+((1/16) * littleblocks[i].x),position[1]+((1/16) *littleblocks[i].y),position[2]+((1/16) *littleblocks[i].z))
             game.scene.add(littleblocks[i].block)
-            
+
       }
 
 document.body.removeChild(e)
@@ -200,12 +200,12 @@ document.body.removeChild(e)
   game.on('tick', function() {
     var chunkname = game.voxels.chunkAtPosition([target.position.x,target.position.y,target.position.z]).join("|")
 
-  
+
   if(target !== undefined
     && target.position !== undefined
-    && game.voxels !== undefined 
+    && game.voxels !== undefined
     && game.voxels.chunks !== undefined
-    && game.voxels.chunks[chunkname]  !== undefined 
+    && game.voxels.chunks[chunkname]  !== undefined
     && game.voxels.chunks[chunkname].roadname !== undefined)
   {
     console.log(game.voxels.chunks[game.voxels.chunkAtPosition([target.position.x,target.position.y,target.position.z]).join("|")].roadname)
@@ -219,7 +219,7 @@ document.body.removeChild(e)
 
 
 
-       
+
         var geometry = new game.THREE.Geometry();
 rollOverMaterial = new game.THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.5, transparent: true } );
 geometry.vertices.push(
@@ -234,7 +234,7 @@ rollOverMesh = new game.THREE.Mesh( geometry, rollOverMaterial );
 geometry.faces.push( new game.THREE.Face3( 0, 1, 2 ) );
 
 geometry.computeBoundingSphere();
-        
+
 
 var chunkSize = 32
 

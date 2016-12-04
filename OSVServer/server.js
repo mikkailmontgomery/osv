@@ -52,66 +52,22 @@ console.log(road.features[4].geometry.coordinates)
 console.log(road.features[5].geometry.coordinates)
 console.log(road.features[6].geometry.coordinates)
 var clients = {}
-//old definition?
-//var road = {"type":"Feature","geometry":{"type":"LineString","coordinates":[[-10305024.55,6024700.11],[-10304853.29,6024685.01],[-10304537.24,6024661.5],[-10304158.32,6024641.61],[-10303765.84,6024599.59],[-10303758.44,6024598.8],[-10303687.56,6024592.8],[-10303671.01,6024590.71],[-10303658.69,6024588.45],[-10303646.03,6024584.5],[-10303634.43,6024579.64],[-10303623.31,6024573.31],[-10303612.21,6024565.32],[-10303528.16,6024483.06],[-10303508.39,6024466.43],[-10303490.35,6024452.51],[-10303469.83,6024438.35],[-10303448.43,6024425.73],[-10303427.9,6024416.4],[-10303411.08,6024409.75],[-10303324.55,6024378.52],[-10302938.79,6024242.22],[-10302903.92,6024234.93],[-10302875.73,6024244.97],[-10302664.06,6024743.1],[-10302547.58,6024999.66],[-10302494.44,6025132.72],[-10302427.92,6025266.23],[-10302351.33,6025422.02],[-10302339.9,6025445.29],[-10302324.09,6025495.43]]}
-//,"properties":{"osm_id":18250629,"name":"Southern Drive","highway":"tertiary"}};
 
-//uncomment for various debugging of GeoJSON roads object(holds road lines data).
-/*console.log(road.type);
-console.log(road.geometry.type);
-console.log(road.geometry.coordinates);
-//console.log(road.geometry.coordinates[i+1][0])
-console.log(road.geometry.coordinates[1][0])
-console.log(road.geometry.coordinates[1][1])
-//console.log(road.properties.osm_id)
-console.log(road.properties.name)
-console.log(road.properties.highway)
-*/
 var blankChunk = genCube()  //Store a generic chunk so it doesn't have to be generated every time.
 //Function to create "blank/generic land" chunks for areas that have no roads or data in them.
 //This is to avoid a world with missing space(a void), just because we have no data doesn't mean nothing exists there!
-function genCube()
-{
-//Chunk in voxel.js is defined as a single array of numbers.  Each different number as respresent a different block type.  Types stored in 2d array, number reference the index.
-//You must know the dimensions of the chunk multiply the height times width time depth to get the total size of the array/chunk.
-//
-//Chunk array seems to be ordered as follows.  Fill 1 row from x=0tox=31, then fill all rows to the top, then start over on filling x on the bottom row over to the originial row.
+function genCube(){
+  //Chunk in voxel.js is defined as a single array of numbers.  Each different number as respresent a different block type.  Types stored in 2d array, number reference the index.
+  //You must know the dimensions of the chunk multiply the height times width time depth to get the total size of the array/chunk.
+  //
+  //Chunk array seems to be ordered as follows.  Fill 1 row from x=0tox=31, then fill all rows to the top, then start over on filling x on the bottom row over to the originial row.
 	var voxels = new Int8Array(32 * 32 * 32)
-  	/*  Might want to delete this, keeping for now, wrote better code in the 0-31 for loop.
-  	for (i = 0; i < voxels.length; i++) {
-		//left to right, first row and last
-		//first row
-
-		if(i < 31){
-			voxels[i] = 1
-		}
-		//second to last row
-		if(i > (32*32*30) -1 && i < (32*32*30)+31){
-			voxels[i] = 1
-		}
-
-		//left to right, first row and last
-		if(32*32*(i -1) == i){
-			voxels[i] = 1
-		}
-
-		voxels[34] = 1
-
-	}
-    */
 	//forward to end, first row and last.
 	for(i = 0;i < 31;i++){
-		//voxels[32*31*i] = 1
 		//last row
-		voxels[(32*32*i)+30] = 1//2
+		voxels[(32*32*i)+30] = 1
 		//first row
-		voxels[32*32*i] = 1//2
-		//voxels[32*32*i+31] = 1
-
-		//voxels[1024 + i] = 1
-		//voxels[3071 + i] = 1
-		//0-31
-		//32*32+(0-31) 1024-1055
+		voxels[32*32*i] = 1
 
 		//fill in all floor blocks(grass)
 		for(i2 = 0;i2 < 31;i2++){
@@ -129,7 +85,7 @@ function genCube()
 	x=1;
 	y=0;
 	z=4;
-	//test code to fiegure out how to render roads.  Place a lineblock in the middle,
+	//test code to figure out how to render roads.  Place a lineblock in the middle,
 	//and sideroad blocks around it.
 	var pos = 32*32*16+16
 	voxels[32*32*16+16] = 2
@@ -143,13 +99,11 @@ function genCube()
 }
 
 
-console.log(" ");
 //Convert coords the use the equator to xy of an onscreen map for continous coords.
 //hard values are max 3857 values.  IF is not needed, the math works that both
 //+ and - coords convert correctly with the same formula.
 //Math.floor because I don't care about percents of a meter.
-function convertEPSG3857toScreenXY(lat,lon)
-{
+function convertEPSG3857toScreenXY(lat,lon){
 	var xlat,ylon
 	xlat = 20026376 + Math.floor(lat);
 	ylon = 20048966 - Math.floor(lon);
@@ -160,8 +114,7 @@ function convertEPSG3857toScreenXY(lat,lon)
 
 //Code from
 //http://stackoverflow.com/questions/4672279/bresenham-algorithm-in-javascript
-function calcStraightLine (startCoordinates, endCoordinates)
-{
+function calcStraightLine (startCoordinates, endCoordinates){
     var coordinatesArray = new Array();
     // Translate coordinates
     var x1 = startCoordinates.x;
@@ -201,8 +154,7 @@ function calcStraightLine (startCoordinates, endCoordinates)
 //convert each point from gps to xy
 //form line of xy's between each xy.
 //combine all those lines together.
-function parseLinestringRoadtoLineCoords(LineStringArray)
-{
+function parseLinestringRoadtoLineCoords(LineStringArray){
 	var lineCoordsArray = new Array();
 	for (i = 0;i < LineStringArray.length - 1;i++)
 	{
@@ -217,37 +169,21 @@ function parseLinestringRoadtoLineCoords(LineStringArray)
 	return lineCoordsArray;
 }
 
-
-function calcChunkNameFromCoords(xlat,ylon,dims)
-{
+function calcChunkNameFromCoords(xlat,ylon,dims){
 	return Math.floor(xlat / (dims+1)) + '|0|' + Math.floor(ylon / (dims+1));
 }
 
-function translatedChunkName(chunk)
-{
+function translatedChunkName(chunk){
 	//return (chunk.position[0] - 303792) + "|0|" + (chunk.position[2] - 438258)
     return (chunk.position[0] - 294668) + "|0|" + (chunk.position[2] - 424954)
 }
 
-function calcChunkCoordsFromCoords(xlat,ylon,dims)
-{
+function calcChunkCoordsFromCoords(xlat,ylon,dims){
 	return {x:Math.floor(xlat / (dims+1)),y:0,z:Math.floor(ylon / (dims+1))};
 }
 
-function coordArrayToChunks2(coordArray,roadname)
-{
-	//var coordArray = parseLinestringRoadtoLineCoords(road.geometry.coordinates);
-	//var coordArray = new Array();
-	//console.log(road.length)
-	//for(i2 = 0;i2 < road.features.length;i2++)
-	//{
-	//	console.log(i2,"of",road.features.length)
-	//	coordArray.push.apply(coordArray,parseLinestringRoadtoLineCoords(road.features[i2].geometry.coordinates))
-	//}
-	//console.log('coord length:',coordArray.length)
+function coordArrayToChunks2(coordArray,roadname){
 	console.log(coordArray[0] , 'to' , coordArray[coordArray.length-1])
-	//console.log("to")
-	//console.log(coordArray[coordArray.length-1])
 	var chunks = new Array();
 	var chunkCoords = new Array();
 	var voxels = new Int8Array(32 * 32 * 32);
@@ -280,34 +216,35 @@ function coordArrayToChunks2(coordArray,roadname)
 			}
 
 		}
-			var px,py,pz,pos
-			px = x - (chunkc.x * (32 + 1))
-			py = (chunkc.y * (32 + 1))
-			pz = y - (chunkc.z * (32 + 1))
-			pos = (32 * 32 * pz) + 0 + (px)
-			chunks[chunkname].voxels[pos] = 2
-			//fill sides of road center
-			if (chunks[chunkname].voxels[pos-2] != 2) {chunks[chunkname].voxels[pos-2] = 3}
-			if (chunks[chunkname].voxels[pos-1] != 2) {chunks[chunkname].voxels[pos-1] = 3}
-			if (chunks[chunkname].voxels[pos+1] != 2) {chunks[chunkname].voxels[pos+1] = 3}
-				if (chunks[chunkname].voxels[pos+2] != 2) {chunks[chunkname].voxels[pos+2] = 3}
-			if (chunks[chunkname].voxels[(32*32)+pos] !=2) {chunks[chunkname].voxels[(32*32)+pos]= 3}
-			if (chunks[chunkname].voxels[pos-(32*32)] !=2) {chunks[chunkname].voxels[pos-(32*32)] = 3}
-			if (chunks[chunkname].voxels[(32*32*2)+pos] !=2) {chunks[chunkname].voxels[(32*32*2)+pos]= 3}
-			if (chunks[chunkname].voxels[pos-(32*32*2)] !=2) {chunks[chunkname].voxels[pos-(32*32*2)] = 3}
+		var px,py,pz,pos
+		px = x - (chunkc.x * (32 + 1))
+		py = (chunkc.y * (32 + 1))
+		pz = y - (chunkc.z * (32 + 1))
+		pos = (32 * 32 * pz) + 0 + (px)
+		chunks[chunkname].voxels[pos] = 2
+		//fill sides of road center
+		if (chunks[chunkname].voxels[pos-2] != 2) {chunks[chunkname].voxels[pos-2] = 3}
+		if (chunks[chunkname].voxels[pos-1] != 2) {chunks[chunkname].voxels[pos-1] = 3}
+		if (chunks[chunkname].voxels[pos+1] != 2) {chunks[chunkname].voxels[pos+1] = 3}
+		if (chunks[chunkname].voxels[pos+2] != 2) {chunks[chunkname].voxels[pos+2] = 3}
+		if (chunks[chunkname].voxels[(32*32)+pos] !=2) {chunks[chunkname].voxels[(32*32)+pos]= 3}
+		if (chunks[chunkname].voxels[pos-(32*32)] !=2) {chunks[chunkname].voxels[pos-(32*32)] = 3}
+		if (chunks[chunkname].voxels[(32*32*2)+pos] !=2) {chunks[chunkname].voxels[(32*32*2)+pos]= 3}
+		if (chunks[chunkname].voxels[pos-(32*32*2)] !=2) {chunks[chunkname].voxels[pos-(32*32*2)] = 3}
 	}
 	return chunks;
 }
 
 //var chunks = coordArrayToChunks();
-var chunks = new Array()// = coordArrayToChunks2();  //master array to hold chunks.
+  var chunks = new Array()// = coordArrayToChunks2();  //master array to hold chunks.
+  //var chunks = coordArrayToChunks2();
 	console.log(road.length)
 
 	for(i2 = 0;i2 < road.features.length;i2++) //for every road in array/dataset
 	{
 		//i2 = road.features.length
 		console.log(i2,"of",road.features.length) //progress - how many roads do we have to left to process?
-		var tempchunks// = coordArrayToChunks2(parseLinestringRoadtoLineCoords(road.features[i2].geometry.coordinates),road.features[i2].properties.name)//processing functions - return assigned to temp varible.
+		var tempchunks = coordArrayToChunks2(parseLinestringRoadtoLineCoords(road.features[i2].geometry.coordinates),road.features[i2].properties.name)//processing functions - return assigned to temp varible.
 		//console.log(road.features[i2].properties.name)
 		for (var c in tempchunks)//check each chunk that was just spit out from processing functions....
 		{
@@ -328,13 +265,10 @@ var chunks = new Array()// = coordArrayToChunks2();  //master array to hold chun
 			}
 			else
 			{
-			//if a particular chunk doesn't exist in the master array, add it to the master array.
-			chunks[tempchunks[c].position.join("|")] = tempchunks[c]
+			  //if a particular chunk doesn't exist in the master array, add it to the master array.
+			  chunks[tempchunks[c].position.join("|")] = tempchunks[c]
 			}
-
 		}
-
-		//chunks.push.apply(chunks,coordArrayToChunks2(parseLinestringRoadtoLineCoords(road.features[i2].geometry.coordinates)))
 	}
 
 var z,x,y
@@ -363,7 +297,7 @@ var http = require('http');
 var url = require('url');
 // Configure our HTTP server to respond with chunks in JSON format.
 var server = http.createServer(function (request, response) {
-  var requestUrl = url.parse(request.url)
+  var requestUrl = url.parse(request.url, true)
   if(requestUrl.pathname == "/"){
     requestUrl.pathname = "/index.html"
   }
@@ -388,7 +322,8 @@ var server = http.createServer(function (request, response) {
   else
   {
   			//TODO: Add verbose logging switch to commandline
-  			//console.log("DOESN'T EXIST",query.chunk);
+  			console.log("DOESN'T EXIST",query.chunk);
+        console.log(query);
   			var chunk = {
 		    position: query['chunk'].split("|"),
 		    dims: [32,32,32],
@@ -435,4 +370,4 @@ iohttpserver.listen(8080)
 
 
 // Put a friendly message on the terminal
-console.log("Server running at http://127.0.0.1:8000/");
+console.log("Server running at http://127.0.0.1:8000/ and http://127.0.0.1:8080");

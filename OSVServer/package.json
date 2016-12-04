@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node speedtest3.js"
+    "start": "node server.js"
   },
     "dependencies": {
   },

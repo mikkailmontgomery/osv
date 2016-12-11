@@ -728,33 +728,39 @@ for(i=0;i<data.length;i++){
   var y = data[i].y - lowesty;
   canvasArray[x + (((highestx-lowestx)+1) * y)] = 1;
 }
-/**
+/**/
 //http://www.williammalone.com/articles/html5-canvas-javascript-paint-bucket-tool/
-var pixelStack = [[((highestx - lowestx) / 2)+lowestx, ((highesty - lowesty) / 2)+lowesty]];
-
+//var pixelStack = [[((highestx - lowestx) / 2), ((highesty - lowesty) / 2)]];
+var pixelStack = [[800,450]];
+var instruct =0;
 while(pixelStack.length)
 {
+  instruct++;
   var newPos, x, y, pixelPos, reachLeft, reachRight;
   newPos = pixelStack.pop();
+  //console.log(newPos);
   x = newPos[0];
   y = newPos[1];
   
-  pixelPos = (y*highestx + x) * 4;
-  while(y-- >= drawingBoundTop && matchStartColor(pixelPos))
+  pixelPos = x + (((highestx-lowestx)+1) * y);
+  while(y-- >= 0 && matchStartColor(canvasArray,pixelPos))
   {
-    pixelPos -= highestx * 4;
+    instruct++;
+    pixelPos -= (highestx-lowestx+1) ;
   }
-  pixelPos += highestx * 4;
-  ++y;
+  pixelPos += (highestx-lowestx+1) ;
+  y++;
   reachLeft = false;
   reachRight = false;
-  while(y++ < highesty-1 && matchStartColor(pixelPos))
+  while(y++ < (highesty-lowesty) && matchStartColor(canvasArray,pixelPos))
   {
-    colorPixel(pixelPos);
+    instruct++;
+    canvasArray[pixelPos] =1;
+    //colorPixel(pixelPos);
 
     if(x > 0)
     {
-      if(matchStartColor(pixelPos - 4))
+      if(matchStartColor(canvasArray,pixelPos - 1))
       {
         if(!reachLeft){
           pixelStack.push([x - 1, y]);
@@ -767,9 +773,9 @@ while(pixelStack.length)
       }
     }
 	
-    if(x < highestx-1)
+    if(x < (highestx-lowestx)-1)
     {
-      if(matchStartColor(pixelPos + 4))
+      if(matchStartColor(canvasArray,pixelPos + 1))
       {
         if(!reachRight)
         {
@@ -783,42 +789,47 @@ while(pixelStack.length)
       }
     }
 			
-    pixelPos += canvasWidth * 4;
+    pixelPos += (highestx-lowestx+1) ;
   }
 }
-context.putImageData(colorLayer, 0, 0);
-*/
-  
+//myContext.putImageData(id, 0, 0);
+/**/
+console.log("instruct:",instruct);
 
 for (i = 0;i<data.length;i++){
-//myContext.putImageData( id, data[i].x -10298762, data[i].y - 6025973);
-//myContext.putImageData( id, data[i].x -20311950, data[i].y - 14019145);
-//myContext.putImageData( id, data[i].x -lowestx, data[i].y - lowesty);
+////myContext.putImageData( id, data[i].x -lowestx, data[i].y - lowesty);
 //myContext.putImageData( id, data[i].x, data[i].y );
 //console.log(data[i].x, data[i].y, data[i].x - lowestx, data[i].y - lowesty);
 }
 
 for(x=0;x<(highestx-lowestx)+1;x++){
   for(y=0;y<(highesty-lowesty)+1;y++){
-      
+      //var pixelPos = (x) + (((highestx-lowestx)+1) * y);
+        //d[pixelPos+0]   = 255;
+        //d[pixelPos+1]   = 255;
+        //d[pixelPos+2]   = 255;
+        //d[pixelPos+3]   = 255;
       if(canvasArray[(x) + (((highestx-lowestx)+1) * y)] == 1){
          //console.log(x,y,(x) + (((highestx-lowestx)+1) * y));
         myContext.putImageData( id, x, y);
+        //var pixelPos = ((y * (highestx-lowestx)) + x) 
+        //d[pixelPos+0]   = 0;
+        //d[pixelPos+1]   = 0;
+        //d[pixelPos+2]   = 0;
+        //d[pixelPos+3]   = 255;
       }
   }
 
 
 }
-
+//myContext.putImageData( id, 0, 0);
 
 }
-function matchStartColor(pixelPos)
+function matchStartColor(arr,pixelPos)
 {
-  var r = colorLayer.data[pixelPos];	
-  var g = colorLayer.data[pixelPos+1];	
-  var b = colorLayer.data[pixelPos+2];
 
-  return (r == startR && g == startG && b == startB);
+  //console.log(pixelPos,arr[pixelPos]);
+  return (arr[pixelPos] == 0);
 }
 
 function colorPixel(pixelPos)
